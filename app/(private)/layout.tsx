@@ -4,29 +4,18 @@ export default function PrivateLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#f5f7fa",
-      }}
-    >
-      <header
-        style={{
-          padding: "16px",
-          background: "#111827",
-          color: "#ffffff",
-        }}
-      >
-        <strong>Prontus</strong>
+    <div className="flex min-h-dvh flex-col bg-background">
+      <header className="sticky top-0 z-10 border-b border-border bg-surface">
+        <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
+          <span className="text-base font-semibold tracking-tight text-foreground">
+            Prontus
+          </span>
+        </div>
       </header>
 
-      <section
-        style={{
-          padding: "16px",
-        }}
-      >
+      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:px-6">
         {children}
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }

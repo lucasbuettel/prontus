@@ -1,9 +1,5 @@
+import { redirect } from "next/navigation";
 
-
-export default function Home() {
-   return (
-    <main>
-      <h1>Prontus</h1>
-    </main>
-  );
+export default function RootPage() {
+  redirect("/login");
 }
