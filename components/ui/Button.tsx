@@ -30,6 +30,26 @@ const sizeStyles: Record<Size, string> = {
   lg: "h-12 px-5 text-base",
 };
 
+export function buttonClasses(
+  opts: {
+    variant?: Variant;
+    size?: Size;
+    fullWidth?: boolean;
+    className?: string;
+  } = {},
+) {
+  const { variant = "primary", size = "md", fullWidth = false, className } = opts;
+  return cn(
+    "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+    "disabled:cursor-not-allowed",
+    variantStyles[variant],
+    sizeStyles[size],
+    fullWidth && "w-full",
+    className,
+  );
+}
+
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   function Button(
     {
