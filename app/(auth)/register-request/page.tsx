@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -5,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui";
+import { RegisterRequestForm } from "@/features/auth/components/RegisterRequestForm";
 
 export default function RegisterRequestPage() {
   return (
@@ -15,9 +17,17 @@ export default function RegisterRequestPage() {
           Após o envio, um administrador irá revisar e aprovar seu acesso.
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">
-          Formulário disponível na próxima etapa (Fase 1 — Auth).
+      <CardContent className="flex flex-col gap-4">
+        <RegisterRequestForm />
+
+        <p className="text-center text-sm text-muted-foreground">
+          Já tem conta?{" "}
+          <Link
+            href="/login"
+            className="font-medium text-primary hover:underline"
+          >
+            Entrar
+          </Link>
         </p>
       </CardContent>
     </Card>
