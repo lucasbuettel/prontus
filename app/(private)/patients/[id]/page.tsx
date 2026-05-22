@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { buttonClasses, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { getPatient } from "@/features/patients/getPatient";
 import { calculateAge } from "@/features/patients/calculateAge";
 import { formatCpf } from "@/lib/format/cpf";
 import { formatPhoneBr } from "@/lib/format/phone";
+import { getConsultationsByPatient } from "@/features/consultations/getConsultations";
+import { ConsultationsList } from "@/features/consultations/components/ConsultationsList";
 
 interface PatientDetailPageProps {
   params: Promise<{ id: string }>;
@@ -27,7 +29,10 @@ export default async function PatientDetailPage({
   params,
 }: PatientDetailPageProps) {
   const { id } = await params;
-  const patient = await getPatient(id);
+  const [patient, consultations] = await Promise.all([
+    getPatient(id),
+    getConsultationsByPatient(id),
+  ]);
   if (!patient) notFound();
 
   const age = calculateAge(patient.birth_date);
@@ -86,16 +91,21 @@ export default async function PatientDetailPage({
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Consultas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Em construção. Será habilitado na Fase 3.
-          </p>
-        </CardContent>
-      </Card>
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold tracking-tight text-foreground">
+            Consultas
+          </h2>
+          <Link
+            href={`/patients/${patient.id}/consultations/new`}
+            className={buttonClasses({ size: "sm" })}
+          >
+            <Plus className="h-4 w-4" aria-hidden />
+            Nova consulta
+          </Link>
+        </div>
+        <ConsultationsList consultations={consultations} />
+      </section>
     </section>
   );
 }
