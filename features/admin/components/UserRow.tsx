@@ -32,12 +32,21 @@ export function UserRow({ user }: UserRowProps) {
     });
   }
 
+  const isSuperadmin = user.role === "SUPERADMIN";
+
   return (
     <li className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-foreground">
-          {user.full_name ?? "(sem nome)"}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-medium text-foreground">
+            {user.full_name ?? "(sem nome)"}
+          </p>
+          {isSuperadmin && (
+            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+              Super admin
+            </span>
+          )}
+        </div>
         <p className="truncate text-xs text-muted-foreground">{user.email}</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Solicitado em {dateFormatter.format(new Date(user.created_at))}
@@ -61,19 +70,21 @@ export function UserRow({ user }: UserRowProps) {
               <Check className="h-4 w-4" aria-hidden />
               Aprovar
             </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              isLoading={isPending}
-              onClick={() => runAction(rejectUser)}
-            >
-              <X className="h-4 w-4" aria-hidden />
-              Rejeitar
-            </Button>
+            {!isSuperadmin && (
+              <Button
+                variant="danger"
+                size="sm"
+                isLoading={isPending}
+                onClick={() => runAction(rejectUser)}
+              >
+                <X className="h-4 w-4" aria-hidden />
+                Rejeitar
+              </Button>
+            )}
           </>
         )}
 
-        {user.status === "APPROVED" && (
+        {user.status === "APPROVED" && !isSuperadmin && (
           <Button
             variant="danger"
             size="sm"
