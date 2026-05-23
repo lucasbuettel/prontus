@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil, Plus } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, ClipboardList } from "lucide-react";
 import { buttonClasses, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { getPatient } from "@/features/patients/getPatient";
 import { calculateAge } from "@/features/patients/calculateAge";
@@ -57,13 +57,22 @@ export default async function PatientDetailPage({
             {patient.sex ? SEX_LABEL[patient.sex] : "Sexo não informado"}
           </p>
         </div>
-        <Link
-          href={`/patients/${patient.id}/edit`}
-          className={buttonClasses({ variant: "secondary", size: "sm" })}
-        >
-          <Pencil className="h-4 w-4" aria-hidden />
-          Editar
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/patients/${patient.id}/exams`}
+            className={buttonClasses({ variant: "secondary", size: "sm" })}
+          >
+            <ClipboardList className="h-4 w-4" aria-hidden />
+            Exames
+          </Link>
+          <Link
+            href={`/patients/${patient.id}/edit`}
+            className={buttonClasses({ variant: "secondary", size: "sm" })}
+          >
+            <Pencil className="h-4 w-4" aria-hidden />
+            Editar
+          </Link>
+        </div>
       </header>
 
       <Card>
