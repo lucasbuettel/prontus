@@ -12,14 +12,15 @@ const SEX_LABEL: Record<"M" | "F" | "OUTRO", string> = {
 
 interface ClinicalSnapshotProps {
   patient: Patient;
-  firstConsultation: Consultation | null;
   lastConsultation: Consultation | null;
+  /** Última versão preenchida de continuous_meds em qualquer atendimento (mais recente primeiro). */
+  currentContinuousMeds: string | null;
 }
 
 export function ClinicalSnapshot({
   patient,
-  firstConsultation,
   lastConsultation,
+  currentContinuousMeds,
 }: ClinicalSnapshotProps) {
   const age = calculateAge(patient.birth_date);
   const sex = patient.sex ? SEX_LABEL[patient.sex] : null;
@@ -48,23 +49,23 @@ export function ClinicalSnapshot({
 
         {daysSince !== null && (
           <p className="text-xs text-muted-foreground">
-            Última consulta{" "}
+            Período interconsultas:{" "}
             {daysSince === 0
-              ? "hoje"
+              ? "mesmo dia"
               : daysSince === 1
-                ? "ontem"
-                : `há ${daysSince} dias`}
+                ? "1 dia"
+                : `${daysSince} dias`}
             .
           </p>
         )}
 
-        {firstConsultation?.continuous_meds && (
+        {currentContinuousMeds && (
           <div className="flex flex-col gap-1">
             <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Medicações contínuas
+              Medicação de uso contínuo (atual)
             </span>
             <p className="whitespace-pre-wrap text-sm text-foreground">
-              {firstConsultation.continuous_meds}
+              {currentContinuousMeds}
             </p>
           </div>
         )}

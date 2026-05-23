@@ -2,10 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getPatient } from "@/features/patients/getPatient";
-import {
-  getFirstConsultation,
-  getLatestConsultation,
-} from "@/features/consultations/getConsultations";
+import { getConsultationsByPatient } from "@/features/consultations/getConsultations";
+import { nextConsultationNumber } from "@/features/consultations/numberConsultations";
+import { defaultsFromLastConsultation } from "@/features/consultations/toFormValues";
+import { getPrescriptionItemsByConsultation } from "@/features/prescriptions/getPrescriptionItems";
 import { ConsultationForm } from "@/features/consultations/components/ConsultationForm";
 import { ClinicalSnapshot } from "@/features/consultations/components/ClinicalSnapshot";
 import type { ConsultationKind } from "@/types/consultation";
@@ -21,12 +21,27 @@ export default async function NewConsultationPage({
   const patient = await getPatient(patientId);
   if (!patient) notFound();
 
-  const [firstConsultation, lastConsultation] = await Promise.all([
-    getFirstConsultation(patientId),
-    getLatestConsultation(patientId),
-  ]);
+  const consultations = await getConsultationsByPatient(patientId);
+  const number = nextConsultationNumber(consultations);
+  const kind: ConsultationKind = consultations.length === 0 ? "FIRST" : "RETURN";
 
-  const kind: ConsultationKind = firstConsultation ? "RETURN" : "FIRST";
+  const lastConsultation = consultations[0] ?? null;
+  const currentContinuousMeds =
+    consultations.find((c) => c.continuous_meds && c.continuous_meds.trim())
+      ?.continuous_meds ?? null;
+
+  // Em RETURN, pré-popula valores comuns + prescrição do último atendimento.
+  // Os itens vêm sem id (entram como novos no atendimento atual; o original
+  // fica preservado no histórico). O médico edita / remove antes de salvar.
+  const lastItems =
+    kind === "RETURN" && lastConsultation
+      ? await getPrescriptionItemsByConsultation(lastConsultation.id)
+      : [];
+
+  const defaultValues =
+    kind === "RETURN"
+      ? defaultsFromLastConsultation(lastConsultation, lastItems)
+      : {};
 
   return (
     <section className="flex flex-col gap-4">
@@ -40,7 +55,12 @@ export default async function NewConsultationPage({
 
       <header className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          {kind === "FIRST" ? "Primeira consulta" : "Consulta de retorno"}
+          Atendimento {number}
+          {kind === "FIRST" && (
+            <span className="ml-2 text-sm font-normal text-muted-foreground">
+              (inicial — com anamnese)
+            </span>
+          )}
         </h1>
         <p className="text-sm text-muted-foreground">{patient.full_name}</p>
       </header>
@@ -48,12 +68,19 @@ export default async function NewConsultationPage({
       {kind === "RETURN" && (
         <ClinicalSnapshot
           patient={patient}
-          firstConsultation={firstConsultation}
           lastConsultation={lastConsultation}
+          currentContinuousMeds={currentContinuousMeds}
         />
       )}
 
-      <ConsultationForm mode="create" patientId={patient.id} kind={kind} />
+      <ConsultationForm
+        mode="create"
+        patientId={patient.id}
+        kind={kind}
+        number={number}
+        canEditPrescription
+        defaultValues={defaultValues}
+      />
     </section>
   );
 }

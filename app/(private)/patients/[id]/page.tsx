@@ -94,14 +94,14 @@ export default async function PatientDetailPage({
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold tracking-tight text-foreground">
-            Consultas
+            Atendimentos
           </h2>
           <Link
             href={`/patients/${patient.id}/consultations/new`}
             className={buttonClasses({ size: "sm" })}
           >
             <Plus className="h-4 w-4" aria-hidden />
-            Nova consulta
+            Novo atendimento
           </Link>
         </div>
         <ConsultationsList consultations={consultations} />

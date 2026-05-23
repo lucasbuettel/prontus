@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Field } from "@/components/ui";
+import { Plus, Trash2 } from "lucide-react";
+import { Button, Field, Input } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import {
   consultationFormSchema,
@@ -12,6 +13,7 @@ import {
 } from "../schemas";
 import {
   EMPTY_CONSULTATION_FORM,
+  EMPTY_PRESCRIPTION_ITEM,
 } from "../toFormValues";
 import { createConsultation, updateConsultation } from "../actions";
 import type { ConsultationKind } from "@/types/consultation";
@@ -21,6 +23,8 @@ type ConsultationFormProps =
       mode: "create";
       patientId: string;
       kind: ConsultationKind;
+      number: number;
+      canEditPrescription: boolean;
       defaultValues?: Partial<ConsultationFormInput>;
       consultationId?: never;
     }
@@ -28,6 +32,8 @@ type ConsultationFormProps =
       mode: "edit";
       patientId: string;
       kind: ConsultationKind;
+      number: number;
+      canEditPrescription: boolean;
       defaultValues: Partial<ConsultationFormInput>;
       consultationId: string;
     };
@@ -46,11 +52,17 @@ export function ConsultationForm(props: ConsultationFormProps) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     setError,
   } = useForm<ConsultationFormInput>({
     resolver: zodResolver(consultationFormSchema),
     defaultValues: { ...EMPTY_CONSULTATION_FORM, ...props.defaultValues },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "prescriptionItems",
   });
 
   function onSubmit(values: ConsultationFormInput) {
@@ -83,6 +95,7 @@ export function ConsultationForm(props: ConsultationFormProps) {
   }
 
   const showAnamnesis = props.kind === "FIRST";
+  const prescriptionErrors = errors.prescriptionItems;
 
   return (
     <form
@@ -93,7 +106,7 @@ export function ConsultationForm(props: ConsultationFormProps) {
       {showAnamnesis && (
         <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Anamnese (primeira consulta)
+            Anamnese (atendimento 1)
           </h2>
 
           <Field label="HDA — História da doença atual" error={errors.hda?.message}>
@@ -115,18 +128,6 @@ export function ConsultationForm(props: ConsultationFormProps) {
           </Field>
 
           <Field
-            label="Medicações contínuas"
-            error={errors.continuousMeds?.message}
-          >
-            <textarea
-              rows={3}
-              className={textareaClasses}
-              placeholder="Nome, dose, frequência..."
-              {...register("continuousMeds")}
-            />
-          </Field>
-
-          <Field
             label="História familiar"
             error={errors.familyHistory?.message}
           >
@@ -138,10 +139,7 @@ export function ConsultationForm(props: ConsultationFormProps) {
             />
           </Field>
 
-          <Field
-            label="Psicossocial"
-            error={errors.psychosocial?.message}
-          >
+          <Field label="Psicossocial" error={errors.psychosocial?.message}>
             <textarea
               rows={3}
               className={textareaClasses}
@@ -154,44 +152,173 @@ export function ConsultationForm(props: ConsultationFormProps) {
 
       <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Evolução SOAP
+          Atendimento {props.number}
         </h2>
 
-        <Field label="S — Subjetivo" error={errors.subjective?.message}>
+        <Field
+          label="Medicação de uso contínuo"
+          error={errors.continuousMeds?.message}
+          hint="Atualize sempre que houver mudança. O histórico fica preservado em cada atendimento."
+        >
           <textarea
             rows={3}
             className={textareaClasses}
-            placeholder="Queixa atual, relato do paciente."
-            {...register("subjective")}
+            placeholder="Nome, dose, frequência das medicações que o paciente usa atualmente."
+            {...register("continuousMeds")}
           />
         </Field>
 
-        <Field label="O — Objetivo" error={errors.objective?.message}>
+        <Field label="Exame físico" error={errors.physicalExam?.message}>
           <textarea
-            rows={3}
+            rows={4}
             className={textareaClasses}
-            placeholder="Exame físico, sinais vitais, achados objetivos."
-            {...register("objective")}
+            placeholder="Sinais vitais, exame segmentar, achados objetivos."
+            {...register("physicalExam")}
           />
         </Field>
 
-        <Field label="A — Avaliação" error={errors.assessment?.message}>
+        <Field label="Conduta" error={errors.conduct?.message}>
           <textarea
-            rows={3}
+            rows={4}
             className={textareaClasses}
-            placeholder="Hipóteses diagnósticas, raciocínio clínico."
-            {...register("assessment")}
+            placeholder="Hipóteses diagnósticas, plano terapêutico, orientações, retorno."
+            {...register("conduct")}
           />
         </Field>
 
-        <Field label="P — Plano" error={errors.plan?.message}>
+        <Field
+          label="Exames complementares"
+          error={errors.complementaryExams?.message}
+          hint="Resultados ou pedidos discutidos neste atendimento."
+        >
           <textarea
             rows={3}
             className={textareaClasses}
-            placeholder="Conduta, prescrição, exames solicitados, retorno."
-            {...register("plan")}
+            placeholder="Ex: solicitado hemograma e TSH. Glicemia de jejum 95 mg/dL."
+            {...register("complementaryExams")}
           />
         </Field>
+      </section>
+
+      <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            Prescrição
+          </h2>
+          {props.canEditPrescription && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => append({ ...EMPTY_PRESCRIPTION_ITEM })}
+            >
+              <Plus className="h-3.5 w-3.5" aria-hidden />
+              Adicionar medicamento
+            </Button>
+          )}
+        </div>
+
+        {!props.canEditPrescription && (
+          <p className="rounded-md border border-border bg-surface-muted px-3 py-2 text-xs text-muted-foreground">
+            Atendimentos anteriores ficam como histórico. Para alterar a
+            prescrição, registre um novo atendimento.
+          </p>
+        )}
+
+        {fields.length === 0 ? (
+          <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">
+            {props.canEditPrescription
+              ? "Nenhum medicamento. Clique em \"Adicionar medicamento\" para incluir."
+              : "Nenhum medicamento prescrito neste atendimento."}
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {fields.map((field, index) => {
+              const itemErrors = prescriptionErrors?.[index];
+              return (
+                <li
+                  key={field.id}
+                  className="flex flex-col gap-3 rounded-md border border-border bg-background p-3"
+                >
+                  <Field
+                    label={`Medicamento #${index + 1}`}
+                    error={itemErrors?.drugName?.message}
+                    required
+                  >
+                    <Input
+                      autoComplete="off"
+                      placeholder="Ex: Dipirona 500mg"
+                      disabled={!props.canEditPrescription}
+                      {...register(`prescriptionItems.${index}.drugName`)}
+                    />
+                  </Field>
+
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <Field
+                      label="Posologia"
+                      error={itemErrors?.dosage?.message}
+                    >
+                      <Input
+                        placeholder="1 cp"
+                        disabled={!props.canEditPrescription}
+                        {...register(`prescriptionItems.${index}.dosage`)}
+                      />
+                    </Field>
+
+                    <Field
+                      label="Frequência"
+                      error={itemErrors?.frequency?.message}
+                    >
+                      <Input
+                        placeholder="8/8h"
+                        disabled={!props.canEditPrescription}
+                        {...register(`prescriptionItems.${index}.frequency`)}
+                      />
+                    </Field>
+
+                    <Field
+                      label="Duração"
+                      error={itemErrors?.duration?.message}
+                    >
+                      <Input
+                        placeholder="7 dias"
+                        disabled={!props.canEditPrescription}
+                        {...register(`prescriptionItems.${index}.duration`)}
+                      />
+                    </Field>
+                  </div>
+
+                  <Field
+                    label="Orientações"
+                    error={itemErrors?.instructions?.message}
+                  >
+                    <textarea
+                      rows={2}
+                      className={textareaClasses}
+                      placeholder="Como tomar, cuidados, observações..."
+                      disabled={!props.canEditPrescription}
+                      {...register(`prescriptionItems.${index}.instructions`)}
+                    />
+                  </Field>
+
+                  {props.canEditPrescription && (
+                    <div className="flex justify-end">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => remove(index)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 text-danger" aria-hidden />
+                        Remover
+                      </Button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       {serverError && (
@@ -213,7 +340,7 @@ export function ConsultationForm(props: ConsultationFormProps) {
           Cancelar
         </Button>
         <Button type="submit" isLoading={isPending}>
-          {props.mode === "create" ? "Registrar consulta" : "Salvar alterações"}
+          {props.mode === "create" ? "Registrar atendimento" : "Salvar alterações"}
         </Button>
       </div>
     </form>
