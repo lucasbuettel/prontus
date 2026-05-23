@@ -3,18 +3,21 @@ import { PATIENT_SEXES } from "@/types/patient";
 import { isValidCpf } from "@/lib/format/cpf";
 import { isValidMobilePhoneBr } from "@/lib/format/phone";
 
-const SEX_OPTIONS = [...PATIENT_SEXES, ""] as const;
-
 export const patientFormSchema = z.object({
   fullName: z
     .string()
     .trim()
     .min(3, "Informe o nome completo")
     .max(160, "Nome muito longo"),
+  recordNumber: z
+    .string()
+    .trim()
+    .min(1, "Informe o número do prontuário")
+    .max(40, "Prontuário muito longo"),
   birthDate: z
     .string()
-    .regex(/^(\d{4}-\d{2}-\d{2})?$/, "Data inválida"),
-  sex: z.enum(SEX_OPTIONS),
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data de nascimento"),
+  sex: z.enum(PATIENT_SEXES, { message: "Selecione o sexo" }),
   cpf: z
     .string()
     .refine((v) => v === "" || isValidCpf(v), "CPF inválido"),

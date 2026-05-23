@@ -4,6 +4,7 @@ export type PatientSex = (typeof PATIENT_SEXES)[number];
 export interface Patient {
   id: string;
   full_name: string;
+  record_number: string | null;
   birth_date: string | null;
   sex: PatientSex | null;
   cpf: string | null;

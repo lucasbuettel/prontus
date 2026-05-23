@@ -31,7 +31,7 @@ export function PatientSearch({ initialQuery = "" }: { initialQuery?: string }) 
       <Input
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Buscar paciente pelo nome"
+        placeholder="Buscar por nome ou prontuário"
         aria-label="Buscar paciente"
         className="pl-9"
       />

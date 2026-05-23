@@ -80,6 +80,7 @@ export default async function PatientDetailPage({
           <CardTitle>Dados cadastrais</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <DetailRow label="Prontuário" value={patient.record_number ?? "—"} />
           <DetailRow label="Data de nascimento" value={formatDate(patient.birth_date)} />
           <DetailRow label="CPF" value={patient.cpf ? formatCpf(patient.cpf) : "—"} />
           <DetailRow label="Celular" value={patient.phone ? formatPhoneBr(patient.phone) : "—"} />

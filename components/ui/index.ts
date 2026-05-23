@@ -4,6 +4,8 @@ export { Input } from "./Input";
 export type { InputProps } from "./Input";
 export { MaskedInput } from "./MaskedInput";
 export type { MaskedInputProps } from "./MaskedInput";
+export { Autocomplete } from "./Autocomplete";
+export type { AutocompleteOption } from "./Autocomplete";
 export { Label } from "./Label";
 export { Field } from "./Field";
 export {

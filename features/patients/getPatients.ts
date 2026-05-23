@@ -11,11 +11,16 @@ export async function getPatients({
 }: GetPatientsParams = {}): Promise<Patient[]> {
   const supabase = await createClient();
   const base = supabase.from("patients").select("*");
+
   const trimmed = q?.trim();
-  const filtered = trimmed ? base.ilike("full_name", `%${trimmed}%`) : base;
+  const filtered = trimmed
+    ? base.or(
+        `full_name.ilike.%${trimmed}%,record_number.ilike.%${trimmed}%`,
+      )
+    : base;
 
   const { data, error } = await filtered
-    .order("created_at", { ascending: false })
+    .order("full_name", { ascending: true })
     .returns<Patient[]>();
 
   if (error) {

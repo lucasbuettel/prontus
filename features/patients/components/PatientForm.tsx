@@ -1,13 +1,21 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Field, Input, MaskedInput } from "@/components/ui";
+import {
+  Autocomplete,
+  Button,
+  Field,
+  Input,
+  MaskedInput,
+  type AutocompleteOption,
+} from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { patientFormSchema, type PatientFormInput } from "../schemas";
 import { createPatient, updatePatient } from "../actions";
+import { searchCid } from "@/lib/cid10/search";
 
 type PatientFormProps =
   | { mode: "create"; defaultValues?: Partial<PatientFormInput>; patientId?: never }
@@ -15,8 +23,9 @@ type PatientFormProps =
 
 const EMPTY_DEFAULTS: PatientFormInput = {
   fullName: "",
+  recordNumber: "",
   birthDate: "",
-  sex: "",
+  sex: "" as never,
   cpf: "",
   phone: "",
   primaryCid: "",
@@ -27,6 +36,35 @@ function toFormValues(
   defaults: Partial<PatientFormInput> | undefined,
 ): PatientFormInput {
   return { ...EMPTY_DEFAULTS, ...defaults };
+}
+
+interface CidFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  name: string;
+}
+
+function CidField({ value, onChange, onBlur, name }: CidFieldProps) {
+  const fetchOptions = useCallback((q: string): AutocompleteOption[] => {
+    return searchCid(q).map((entry) => ({
+      value: entry.code,
+      label: entry.code,
+      secondary: entry.description,
+    }));
+  }, []);
+
+  return (
+    <Autocomplete
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      name={name}
+      fetchOptions={fetchOptions}
+      placeholder="Ex: I10 ou hipertensão"
+      emptyLabel="Sem código sugerido. Você pode digitar livremente."
+    />
+  );
 }
 
 export function PatientForm(props: PatientFormProps) {
@@ -83,11 +121,26 @@ export function PatientForm(props: PatientFormProps) {
       </Field>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Data de nascimento" error={errors.birthDate?.message}>
-          <Input type="date" {...register("birthDate")} />
+        <Field
+          label="Prontuário"
+          error={errors.recordNumber?.message}
+          required
+          hint="Número/código único do paciente na clínica."
+        >
+          <Input
+            autoComplete="off"
+            placeholder="Ex: 00123 ou ABC-001"
+            {...register("recordNumber")}
+          />
         </Field>
 
-        <Field label="Sexo" error={errors.sex?.message}>
+        <Field label="Data de nascimento" error={errors.birthDate?.message} required>
+          <Input type="date" {...register("birthDate")} />
+        </Field>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Sexo" error={errors.sex?.message} required>
           <select
             className={cn(
               "h-11 w-full rounded-md border border-border-strong bg-surface px-3 text-sm text-foreground shadow-sm",
@@ -95,15 +148,13 @@ export function PatientForm(props: PatientFormProps) {
             )}
             {...register("sex")}
           >
-            <option value="">—</option>
+            <option value="">Selecione</option>
             <option value="F">Feminino</option>
             <option value="M">Masculino</option>
             <option value="OUTRO">Outro</option>
           </select>
         </Field>
-      </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="CPF" error={errors.cpf?.message}>
           <Controller
             name="cpf"
@@ -122,7 +173,9 @@ export function PatientForm(props: PatientFormProps) {
             )}
           />
         </Field>
+      </div>
 
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Celular" error={errors.phone?.message}>
           <Controller
             name="phone"
@@ -141,15 +194,26 @@ export function PatientForm(props: PatientFormProps) {
             )}
           />
         </Field>
-      </div>
 
-      <Field
-        label="CID principal"
-        error={errors.primaryCid?.message}
-        hint="Ex: I10, E11.9 — pode preencher depois."
-      >
-        <Input placeholder="I10" {...register("primaryCid")} />
-      </Field>
+        <Field
+          label="CID principal"
+          error={errors.primaryCid?.message}
+          hint="Digite o código ou descrição. Texto livre permitido."
+        >
+          <Controller
+            name="primaryCid"
+            control={control}
+            render={({ field }) => (
+              <CidField
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                name={field.name}
+              />
+            )}
+          />
+        </Field>
+      </div>
 
       <Field label="Observações" error={errors.notes?.message}>
         <textarea

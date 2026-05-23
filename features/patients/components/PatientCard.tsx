@@ -15,6 +15,7 @@ interface PatientCardProps {
 export function PatientCard({ patient }: PatientCardProps) {
   const age = calculateAge(patient.birth_date);
   const subtitleParts: string[] = [];
+  if (patient.record_number) subtitleParts.push(`Prontuário ${patient.record_number}`);
   if (age !== null) subtitleParts.push(`${age} anos`);
   if (patient.sex) subtitleParts.push(SEX_LABEL[patient.sex]);
   if (patient.primary_cid) subtitleParts.push(`CID ${patient.primary_cid}`);

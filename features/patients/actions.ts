@@ -31,13 +31,18 @@ function emptyToNull(value: string | undefined): string | null {
 function mapFormToRow(input: ReturnType<typeof patientFormSchema.parse>) {
   return {
     full_name: input.fullName,
-    birth_date: emptyToNull(input.birthDate),
-    sex: input.sex || null,
+    record_number: input.recordNumber.trim(),
+    birth_date: input.birthDate,
+    sex: input.sex,
     cpf: emptyToNull(unmaskCpf(input.cpf)),
     phone: emptyToNull(unmaskPhone(input.phone)),
     primary_cid: emptyToNull(input.primaryCid),
     notes: emptyToNull(input.notes),
   };
+}
+
+function withErrorDetail(base: string, message: string | undefined): string {
+  return message ? `${base} (${message})` : base;
 }
 
 export async function createPatient(
@@ -66,7 +71,20 @@ export async function createPatient(
 
   if (error || !data) {
     console.error("[patients/createPatient] error:", error?.message);
-    return { ok: false, error: "Não foi possível criar o paciente." };
+    if (error?.code === "23505") {
+      return {
+        ok: false,
+        error: "Já existe paciente com esse número de prontuário.",
+        fieldErrors: { recordNumber: "Prontuário já cadastrado" },
+      };
+    }
+    return {
+      ok: false,
+      error: withErrorDetail(
+        "Não foi possível criar o paciente.",
+        error?.message,
+      ),
+    };
   }
 
   revalidatePath("/patients");
@@ -94,7 +112,20 @@ export async function updatePatient(
 
   if (error) {
     console.error("[patients/updatePatient] error:", error.message);
-    return { ok: false, error: "Não foi possível atualizar o paciente." };
+    if (error.code === "23505") {
+      return {
+        ok: false,
+        error: "Já existe paciente com esse número de prontuário.",
+        fieldErrors: { recordNumber: "Prontuário já cadastrado" },
+      };
+    }
+    return {
+      ok: false,
+      error: withErrorDetail(
+        "Não foi possível atualizar o paciente.",
+        error.message,
+      ),
+    };
   }
 
   revalidatePath("/patients");

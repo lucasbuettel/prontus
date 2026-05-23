@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useCallback, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
-import { Button, Field, Input } from "@/components/ui";
+import {
+  Autocomplete,
+  Button,
+  Field,
+  Input,
+  type AutocompleteOption,
+} from "@/components/ui";
 import { cn } from "@/lib/cn";
 import {
   consultationFormSchema,
@@ -17,6 +23,7 @@ import {
 } from "../toFormValues";
 import { createConsultation, updateConsultation } from "../actions";
 import type { ConsultationKind } from "@/types/consultation";
+import { searchDrug } from "@/lib/rename/search";
 
 type ConsultationFormProps =
   | {
@@ -43,6 +50,37 @@ const textareaClasses = cn(
   "placeholder:text-muted",
   "focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary",
 );
+
+interface DrugFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  onBlur?: () => void;
+  name: string;
+  disabled?: boolean;
+}
+
+function DrugField({ value, onChange, onBlur, name, disabled }: DrugFieldProps) {
+  const fetchOptions = useCallback((q: string): AutocompleteOption[] => {
+    return searchDrug(q).map((entry) => ({
+      value: entry.name,
+      label: entry.name,
+    }));
+  }, []);
+
+  return (
+    <Autocomplete
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      name={name}
+      disabled={disabled}
+      fetchOptions={fetchOptions}
+      minChars={2}
+      placeholder="Ex: Dipirona 500mg"
+      emptyLabel="Não está na RENAME. Você pode prescrever assim mesmo."
+    />
+  );
+}
 
 export function ConsultationForm(props: ConsultationFormProps) {
   const router = useRouter();
@@ -244,12 +282,20 @@ export function ConsultationForm(props: ConsultationFormProps) {
                     label={`Medicamento #${index + 1}`}
                     error={itemErrors?.drugName?.message}
                     required
+                    hint="Digite 2+ letras para sugestões da RENAME."
                   >
-                    <Input
-                      autoComplete="off"
-                      placeholder="Ex: Dipirona 500mg"
-                      disabled={!props.canEditPrescription}
-                      {...register(`prescriptionItems.${index}.drugName`)}
+                    <Controller
+                      name={`prescriptionItems.${index}.drugName`}
+                      control={control}
+                      render={({ field }) => (
+                        <DrugField
+                          value={field.value ?? ""}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          disabled={!props.canEditPrescription}
+                        />
+                      )}
                     />
                   </Field>
 
