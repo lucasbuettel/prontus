@@ -10,39 +10,59 @@ export function GoogleSignInButton({
   label?: string;
 }) {
   const [isPending, setIsPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleClick() {
+    setError(null);
     setIsPending(true);
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
 
-    if (error || !data.url) {
+    try {
+      const supabase = createClient();
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (oauthError || !data?.url) {
+        setIsPending(false);
+        setError(oauthError?.message ?? "Não foi possível iniciar o login.");
+        return;
+      }
+
+      window.location.href = data.url;
+    } catch (err) {
       setIsPending(false);
-      window.location.href = `/login?error=oauth&reason=${encodeURIComponent(
-        error?.message ?? "no_url",
-      )}`;
-      return;
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Erro inesperado ao iniciar o login.",
+      );
     }
-
-    window.location.href = data.url;
   }
 
   return (
-    <Button
-      type="button"
-      variant="secondary"
-      fullWidth
-      isLoading={isPending}
-      onClick={handleClick}
-    >
-      <GoogleLogo />
-      {label}
-    </Button>
+    <div className="flex flex-col gap-2">
+      <Button
+        type="button"
+        variant="secondary"
+        fullWidth
+        isLoading={isPending}
+        onClick={handleClick}
+      >
+        <GoogleLogo />
+        {label}
+      </Button>
+      {error && (
+        <p
+          role="alert"
+          className="rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-xs text-danger"
+        >
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -51,7 +71,7 @@ function GoogleLogo() {
     <svg
       aria-hidden="true"
       viewBox="0 0 18 18"
-      className="h-4 w-4"
+      className="pointer-events-none h-4 w-4"
     >
       <path
         fill="#4285F4"

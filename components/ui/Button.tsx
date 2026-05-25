@@ -43,6 +43,8 @@ export function buttonClasses(
     "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
     "disabled:cursor-not-allowed",
+    "touch-manipulation select-none cursor-pointer",
+    "active:scale-[0.99]",
     variantStyles[variant],
     sizeStyles[size],
     fullWidth && "w-full",
