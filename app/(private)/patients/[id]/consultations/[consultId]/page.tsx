@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Printer } from "lucide-react";
 import {
   buttonClasses,
   Card,
@@ -79,88 +79,95 @@ export default async function ConsultationDetailPage({
             {patient.full_name} · {dateFormatter.format(new Date(consultation.created_at))}
           </p>
         </div>
-        <Link
-          href={`/patients/${patient.id}/consultations/${consultation.id}/edit`}
-          className={buttonClasses({ variant: "secondary", size: "sm" })}
-        >
-          <Pencil className="h-4 w-4" aria-hidden />
-          Editar
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/print/consultations/${consultation.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonClasses({ variant: "ghost", size: "sm" })}
+          >
+            <Printer className="h-4 w-4" aria-hidden />
+            Imprimir
+          </Link>
+          <Link
+            href={`/patients/${patient.id}/consultations/${consultation.id}/edit`}
+            className={buttonClasses({ variant: "secondary", size: "sm" })}
+          >
+            <Pencil className="h-4 w-4" aria-hidden />
+            Editar
+          </Link>
+        </div>
       </header>
-
-      {isFirst && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Anamnese</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <Section title="HDA" value={consultation.hda} />
-            <Section title="HPP" value={consultation.hpp} />
-            <Section
-              title="História familiar"
-              value={consultation.family_history}
-            />
-            <Section title="Psicossocial" value={consultation.psychosocial} />
-          </CardContent>
-        </Card>
-      )}
 
       <Card>
         <CardHeader>
           <CardTitle>Atendimento {number}</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
+          {isFirst && (
+            <>
+              <Section title="HDA" value={consultation.hda} />
+              <Section title="HPP" value={consultation.hpp} />
+            </>
+          )}
           <Section
             title="Medicação de uso contínuo"
             value={consultation.continuous_meds}
           />
+          {isFirst && (
+            <>
+              <Section
+                title="História familiar"
+                value={consultation.family_history}
+              />
+              <Section title="Psicossocial" value={consultation.psychosocial} />
+            </>
+          )}
           <Section title="Exame físico" value={consultation.physical_exam} />
-          <Section title="Conduta" value={consultation.conduct} />
           <Section
             title="Exames complementares"
             value={consultation.complementary_exams}
           />
-        </CardContent>
-      </Card>
+          <Section title="Conduta" value={consultation.conduct} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Prescrição</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {prescriptionItems.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhum medicamento prescrito neste atendimento.
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {prescriptionItems.map((item) => {
-                const summary = [item.dosage, item.frequency, item.duration]
-                  .filter(Boolean)
-                  .join(" · ");
-                return (
-                  <li
-                    key={item.id}
-                    className="rounded-md border border-border bg-background p-3"
-                  >
-                    <p className="text-sm font-medium text-foreground">
-                      {item.drug_name}
-                    </p>
-                    {summary && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {summary}
+          <div className="mt-2 flex flex-col gap-2 border-t border-border pt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Prescrição
+            </h3>
+            {prescriptionItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nenhum medicamento prescrito neste atendimento.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {prescriptionItems.map((item) => {
+                  const summary = [item.dosage, item.frequency, item.duration]
+                    .filter(Boolean)
+                    .join(" · ");
+                  return (
+                    <li
+                      key={item.id}
+                      className="rounded-md border border-border bg-background p-3"
+                    >
+                      <p className="text-sm font-medium text-foreground">
+                        {item.drug_name}
                       </p>
-                    )}
-                    {item.instructions && (
-                      <p className="mt-1 whitespace-pre-wrap text-xs text-foreground">
-                        {item.instructions}
-                      </p>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                      {summary && (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {summary}
+                        </p>
+                      )}
+                      {item.instructions && (
+                        <p className="mt-1 whitespace-pre-wrap text-xs text-foreground">
+                          {item.instructions}
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </CardContent>
       </Card>
     </section>

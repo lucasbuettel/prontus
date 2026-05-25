@@ -141,57 +141,32 @@ export function ConsultationForm(props: ConsultationFormProps) {
       onSubmit={handleSubmit(onSubmit)}
       noValidate
     >
-      {showAnamnesis && (
-        <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Anamnese (atendimento 1)
-          </h2>
-
-          <Field label="HDA — História da doença atual" error={errors.hda?.message}>
-            <textarea
-              rows={4}
-              className={textareaClasses}
-              placeholder="Início, evolução, sintomas associados, fatores de melhora/piora..."
-              {...register("hda")}
-            />
-          </Field>
-
-          <Field label="HPP — História pregressa" error={errors.hpp?.message}>
-            <textarea
-              rows={3}
-              className={textareaClasses}
-              placeholder="Doenças prévias, cirurgias, alergias..."
-              {...register("hpp")}
-            />
-          </Field>
-
-          <Field
-            label="História familiar"
-            error={errors.familyHistory?.message}
-          >
-            <textarea
-              rows={3}
-              className={textareaClasses}
-              placeholder="Doenças relevantes em familiares de 1º grau..."
-              {...register("familyHistory")}
-            />
-          </Field>
-
-          <Field label="Psicossocial" error={errors.psychosocial?.message}>
-            <textarea
-              rows={3}
-              className={textareaClasses}
-              placeholder="Trabalho, hábitos, suporte familiar, tabagismo, etilismo..."
-              {...register("psychosocial")}
-            />
-          </Field>
-        </section>
-      )}
-
       <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Atendimento {props.number}
         </h2>
+
+        {showAnamnesis && (
+          <>
+            <Field label="HDA — História da doença atual" error={errors.hda?.message}>
+              <textarea
+                rows={4}
+                className={textareaClasses}
+                placeholder="Início, evolução, sintomas associados, fatores de melhora/piora..."
+                {...register("hda")}
+              />
+            </Field>
+
+            <Field label="HPP — História pregressa" error={errors.hpp?.message}>
+              <textarea
+                rows={3}
+                className={textareaClasses}
+                placeholder="Doenças prévias, cirurgias, alergias..."
+                {...register("hpp")}
+              />
+            </Field>
+          </>
+        )}
 
         <Field
           label="Medicação de uso contínuo"
@@ -206,21 +181,37 @@ export function ConsultationForm(props: ConsultationFormProps) {
           />
         </Field>
 
+        {showAnamnesis && (
+          <>
+            <Field
+              label="História familiar"
+              error={errors.familyHistory?.message}
+            >
+              <textarea
+                rows={3}
+                className={textareaClasses}
+                placeholder="Doenças relevantes em familiares de 1º grau..."
+                {...register("familyHistory")}
+              />
+            </Field>
+
+            <Field label="Psicossocial" error={errors.psychosocial?.message}>
+              <textarea
+                rows={3}
+                className={textareaClasses}
+                placeholder="Trabalho, hábitos, suporte familiar, tabagismo, etilismo..."
+                {...register("psychosocial")}
+              />
+            </Field>
+          </>
+        )}
+
         <Field label="Exame físico" error={errors.physicalExam?.message}>
           <textarea
             rows={4}
             className={textareaClasses}
             placeholder="Sinais vitais, exame segmentar, achados objetivos."
             {...register("physicalExam")}
-          />
-        </Field>
-
-        <Field label="Conduta" error={errors.conduct?.message}>
-          <textarea
-            rows={4}
-            className={textareaClasses}
-            placeholder="Hipóteses diagnósticas, plano terapêutico, orientações, retorno."
-            {...register("conduct")}
           />
         </Field>
 
@@ -236,34 +227,42 @@ export function ConsultationForm(props: ConsultationFormProps) {
             {...register("complementaryExams")}
           />
         </Field>
-      </section>
 
-      <section className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            Prescrição
-          </h2>
-          {props.canEditPrescription && (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => append({ ...EMPTY_PRESCRIPTION_ITEM })}
-            >
-              <Plus className="h-3.5 w-3.5" aria-hidden />
-              Adicionar medicamento
-            </Button>
+        <Field label="Conduta" error={errors.conduct?.message}>
+          <textarea
+            rows={4}
+            className={textareaClasses}
+            placeholder="Hipóteses diagnósticas, plano terapêutico, orientações, retorno."
+            {...register("conduct")}
+          />
+        </Field>
+
+        <div className="mt-2 flex flex-col gap-3 border-t border-border pt-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Prescrição
+            </h3>
+            {props.canEditPrescription && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => append({ ...EMPTY_PRESCRIPTION_ITEM })}
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden />
+                Adicionar medicamento
+              </Button>
+            )}
+          </div>
+
+          {!props.canEditPrescription && (
+            <p className="rounded-md border border-border bg-surface-muted px-3 py-2 text-xs text-muted-foreground">
+              Atendimentos anteriores ficam como histórico. Para alterar a
+              prescrição, registre um novo atendimento.
+            </p>
           )}
-        </div>
 
-        {!props.canEditPrescription && (
-          <p className="rounded-md border border-border bg-surface-muted px-3 py-2 text-xs text-muted-foreground">
-            Atendimentos anteriores ficam como histórico. Para alterar a
-            prescrição, registre um novo atendimento.
-          </p>
-        )}
-
-        {fields.length === 0 ? (
+          {fields.length === 0 ? (
           <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">
             {props.canEditPrescription
               ? "Nenhum medicamento. Clique em \"Adicionar medicamento\" para incluir."
@@ -365,6 +364,7 @@ export function ConsultationForm(props: ConsultationFormProps) {
             })}
           </ul>
         )}
+        </div>
       </section>
 
       {serverError && (
